@@ -9,6 +9,10 @@
 #include <stddef.h>
 #include <stdbool.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 // A ctype describes a type for use in generic storage ADTs.
 // attributes:
 //   - size:    the size in bytes of the associated data
@@ -19,8 +23,11 @@
 //   - print:   displays a human-readable representation of the value
 //   - cmp:     compares two items, item1 and item2
 //              returns 0 if equal, <0 if item1 < item2, >0 if item1 > item2
-// note: clients must create only one instance of a given ctype;
-//       all uses of the same type must refer to the same ctype pointer
+// ownership:
+//   - A ctype does not own the values passed to its callbacks.
+//   - ctype_create returns an owned descriptor; destroy it with
+//     ctype_destroy. The built-in singleton descriptors must not be freed.
+//   - dup must return a fresh heap allocation which destroy can release.
 typedef struct ctype ctype;
 
 // Wrap stack variables to temporary pointers for generic storage ADTs
@@ -62,7 +69,8 @@ size_t data_size(const ctype *type);
 //   using the dup method of type.
 // requires: type is not NULL
 // effects: allocates heap memory [caller must free with data_destroy]
-// note: returns NULL if value is NULL
+// note: the callback may return NULL on allocation failure; callers in this
+//       library treat that as a fatal allocation error.
 void *data_dup(const void *value, const ctype *type);
 
 // data_destroy(value, type) frees value from the heap memory using
@@ -96,5 +104,9 @@ const ctype *ctype_float(void);
 const ctype *ctype_double(void);
 // === String type ===
 const ctype *ctype_string(void);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

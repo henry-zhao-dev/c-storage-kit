@@ -27,9 +27,26 @@ static const char *ASSERT_INDEX_END_AFTER_START
   = "The ending index cannot be less than the starting index!";
 
 static const char *ERROR_ITEM_DUP = "Failed to duplicate item!";
+static const char *ERROR_SIZE_OVERFLOW = "Requested storage size is too large!";
 
 // Helper function declaration
 static void qsort_range(calist *al, size_t first, size_t last);
+
+static void check_pointer_array_size(size_t count) {
+  if (count > SIZE_MAX / sizeof(void *)) {
+    FATAL_ERROR(ERROR_SIZE_OVERFLOW);
+  }
+}
+
+static size_t next_capacity(size_t capacity) {
+  if (capacity == 0) {
+    return 1;
+  }
+  if (capacity > SIZE_MAX / 2) {
+    FATAL_ERROR(ERROR_SIZE_OVERFLOW);
+  }
+  return capacity * 2;
+}
 
 calist *calist_create(const ctype *type) {
   ASSERT_NOT_NULL(type, NULL);
@@ -39,6 +56,7 @@ calist *calist_create(const ctype *type) {
 calist *calist_create_size(const ctype *type, size_t init_cap) {
   ASSERT_NOT_NULL(type, NULL);
   ASSERT_MSG(init_cap, "The initial capacity of calist cannot be zero!");
+  check_pointer_array_size(init_cap);
 
   calist *al = malloc(sizeof(*al));
   if (!al) {
@@ -47,6 +65,7 @@ calist *calist_create_size(const ctype *type, size_t init_cap) {
 
   al->data = malloc(sizeof(*al->data) * init_cap);
   if (!al->data) {
+    free(al);
     ALLOC_ERROR("calist with the given capacity");
   }
   
@@ -83,9 +102,14 @@ calist *calist_dup(const calist *al) {
     ALLOC_ERROR("calist");
   }
 
-  al_copy->data = malloc(sizeof(*al_copy->data) * al->capacity);
-  if (!al_copy->data) {
-    ALLOC_ERROR("calist with the given capacity");
+  al_copy->data = NULL;
+  if (al->capacity > 0) {
+    check_pointer_array_size(al->capacity);
+    al_copy->data = malloc(sizeof(*al_copy->data) * al->capacity);
+    if (!al_copy->data) {
+      free(al_copy);
+      ALLOC_ERROR("calist with the given capacity");
+    }
   }
 
   for (size_t i = 0; i < al->size; ++i) {
@@ -155,6 +179,7 @@ void calist_reserve(calist *al, size_t n) {
   ASSERT_NOT_NULL(al, NULL);
 
   if (n <= al->capacity) return;
+  check_pointer_array_size(n);
 
   void **new_data = realloc(al->data, sizeof(void *) * n);
   if (!new_data) {
@@ -169,6 +194,13 @@ void calist_reclaim(calist *al) {
   ASSERT_NOT_NULL(al, NULL);
   
   if (al->size == al->capacity) return;
+
+  if (al->size == 0) {
+    free(al->data);
+    al->data = NULL;
+    al->capacity = 0;
+    return;
+  }
   
   void **new_data = realloc(al->data, sizeof(void *) * al->size);
   if (!new_data) {
@@ -229,7 +261,7 @@ void calist_append(calist *al, const void *item) {
   }
 
   if (al->size == al->capacity) {
-    calist_reserve(al, al->capacity * 2);
+    calist_reserve(al, next_capacity(al->capacity));
   }
   al->data[al->size] = item_copy;
   ++al->size;
@@ -240,9 +272,20 @@ void calist_append_all(calist *al, const calist *src) {
   ASSERT_NOT_NULL(src, NULL);
   ASSERT_MSG(ctype_equals(src->type, al->type), ASSERT_CALIST_SAME_TYPE);
 
-  for (size_t i = 0; i < src->size; ++i) {
-    calist_append(al, src->data[i]);
+  const calist *source = src;
+  calist *snapshot = NULL;
+  if (src == al) {
+    snapshot = calist_dup(src);
+    source = snapshot;
   }
+
+  if (source->size > SIZE_MAX - al->size) {
+    FATAL_ERROR(ERROR_SIZE_OVERFLOW);
+  }
+  for (size_t i = 0; i < source->size; ++i) {
+    calist_append(al, source->data[i]);
+  }
+  calist_destroy(snapshot);
 }
 
 void calist_insert(calist *al, size_t index, const void *item) {
@@ -256,7 +299,7 @@ void calist_insert(calist *al, size_t index, const void *item) {
   }
 
   if (al->size == al->capacity) {
-    calist_reserve(al, al->capacity * 2);
+    calist_reserve(al, next_capacity(al->capacity));
   }
   for (size_t i = al->size; i > index; --i) {
     al->data[i] = al->data[i - 1];
@@ -277,19 +320,31 @@ void calist_insert_all(calist *al, size_t index, const calist *src) {
   ASSERT_MSG(ctype_equals(src->type, al->type), ASSERT_CALIST_SAME_TYPE);
   ASSERT_MSG(index <= al->size, ASSERT_INDEX_BOUNDED_INCLUSIVE);
 
-  calist_reserve(al, al->size + src->size);
-  // Shift elements backwards to make room
-  for (size_t i = al->size; i-- > index;) {
-    al->data[i + src->size] = al->data[i];
+  if (src->size > SIZE_MAX - al->size) {
+    FATAL_ERROR(ERROR_SIZE_OVERFLOW);
   }
 
-  for (size_t i = 0; i < src->size; ++i) {
-    al->data[index + i] = data_dup(src->data[i], al->type);
+  const calist *source = src;
+  calist *snapshot = NULL;
+  if (src == al) {
+    snapshot = calist_dup(src);
+    source = snapshot;
+  }
+
+  calist_reserve(al, al->size + source->size);
+  // Shift elements backwards to make room
+  for (size_t i = al->size; i-- > index;) {
+    al->data[i + source->size] = al->data[i];
+  }
+
+  for (size_t i = 0; i < source->size; ++i) {
+    al->data[index + i] = data_dup(source->data[i], al->type);
     if (!al->data[index + i]) {
       FATAL_ERROR(ERROR_ITEM_DUP);
     }
   }
-  al->size += src->size;
+  al->size += source->size;
+  calist_destroy(snapshot);
 }
 
 void calist_pop(calist *al, size_t index) {
@@ -528,17 +583,17 @@ size_t calist_bsearch(const calist *al, const void *item) {
   }
 
   size_t low = 0;
-  size_t high = al->size - 1;
+  size_t high = al->size;
 
-  while (low <= high) {
-    size_t mid = (low + high) / 2;
+  while (low < high) {
+    size_t mid = low + (high - low) / 2;
     int cmp = data_cmp(al->data[mid], item, al->type);
     if (!cmp) {
       return mid;
     } else if (cmp < 0) {
       low = mid + 1;
     } else {
-      high = mid - 1;
+      high = mid;
     }
   }
   return CALIST_INDEX_NOT_FOUND;
