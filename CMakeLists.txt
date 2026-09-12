@@ -8,7 +8,15 @@ project(cstorage_kit
 
 include(GNUInstallDirs)
 
-option(CSTORAGE_KIT_BUILD_EXAMPLES "Build the cstorage-kit examples" OFF)
+set(CSTORAGE_KIT_STANDALONE OFF)
+if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
+    set(CSTORAGE_KIT_STANDALONE ON)
+endif()
+
+option(CSTORAGE_KIT_BUILD_TESTS
+    "Build the cstorage-kit unit tests"
+    ${CSTORAGE_KIT_STANDALONE}
+)
 option(CSTORAGE_KIT_ENABLE_SANITIZERS
     "Build with AddressSanitizer and UndefinedBehaviorSanitizer"
     OFF
@@ -50,9 +58,9 @@ if(CSTORAGE_KIT_ENABLE_SANITIZERS AND
     target_link_options(cstorage_kit PUBLIC -fsanitize=address,undefined)
 endif()
 
-if(CSTORAGE_KIT_BUILD_EXAMPLES)
-    add_executable(cstorage_kit_demo examples/demo_calist_int.c)
-    target_link_libraries(cstorage_kit_demo PRIVATE CStorageKit::Core)
+if(CSTORAGE_KIT_BUILD_TESTS)
+    enable_testing()
+    add_subdirectory(tests)
 endif()
 
 install(TARGETS cstorage_kit
