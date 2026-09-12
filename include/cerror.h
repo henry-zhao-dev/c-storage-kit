@@ -8,6 +8,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+// Invalid API use is intentionally fatal: precondition violations call
+// abort(), while allocation failures call exit(EXIT_FAILURE). The container
+// APIs do not return an error code for these programmer/configuration errors.
+
 // ASSERT_MSG(cond, msg) prints msg and terminates the program immediately
 //   if cond is false. If msg is NULL, then the printed message will be
 //   "Terminating program".
@@ -57,5 +65,9 @@
           __FILE__, __LINE__, __func__, (final_type)); \
   exit(EXIT_FAILURE); \
 } while (0)
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

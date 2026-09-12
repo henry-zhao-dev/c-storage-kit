@@ -27,12 +27,15 @@ static void calist_append_heap(calist *al) {
 
 // Check if num is even
 static bool is_even(const calist *al, const void *item, const void *args) {
+  (void)al;
+  (void)args;
   const int *int_item = item;
   return (*int_item % 2 == 0);
 }
 
 // Multiply the value of num by 3
 static void multiply(const calist *al, void *item, const void *args) {
+  (void)al;
   int *int_ptr = item;
   const int *factor = args;
   *int_ptr *= (*factor);

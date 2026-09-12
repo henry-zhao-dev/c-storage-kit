@@ -5,6 +5,17 @@
 
 #include "ctype.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+// API policy:
+//   - The calist owns every item returned by its ctype's dup callback.
+//   - Pointers returned by calist_get and calist_get_mutable are borrowed;
+//     do not free them, and do not use them after a structural modification.
+//   - Violating a documented precondition is a programming error and aborts.
+//   - Allocation or duplication failure terminates the process with failure.
+
 // A calist stores items in a dynamically resizable array,
 // with all items deeply copied into heap memory.
 //
@@ -157,8 +168,8 @@ const void *calist_get(const calist *al, size_t index);
 //   at the given index position in al.
 // requires: al is not NULL and not empty
 //           0 <= index < calist_size(al)
-// warning: do not free the returned pointer, as doing so will result
-//          in a double free when removing the item or destroying al
+// warning: the returned pointer is borrowed. Do not free it; doing so will
+//          result in a double free when removing the item or destroying al.
 void *calist_get_mutable(const calist *al, size_t index);
 
 // calist_set(al, index, new_item) replaces the old item at the given 
@@ -368,5 +379,9 @@ calist *calist_unique(const calist *al);
 // effects: modifies al, frees heap memory
 // note: returns the number of duplicate items removed
 size_t calist_remove_dup(calist *al);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

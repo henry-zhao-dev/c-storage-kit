@@ -1,153 +1,148 @@
-## Overview
+# c-storage-kit
 
-A calist stores items in a dynamically resizable array, with all items deeply copied into heap memory.
+c-storage-kit is a lightweight C library for generic storage abstractions. Its
+current focus is `calist`, a dynamically resizable array with explicit value
+ownership and a reusable type interface.
 
-Each calist is associated with a specific **ctype**, defining a common type for all stored items. 
-Type-specific behaviors (duplication, comparison, printing, and deallocation) are handled through the **ctype interface**.
+The project grew out of ideas I first encountered in **CS 136: Elementary
+Algorithm Design and Data Abstraction** at the University of Waterloo. That
+course introduced me to the discipline of designing abstract data types in C:
+separating an interface from its implementation, defining invariants, and
+being deliberate about memory. c-storage-kit is an ongoing application of
+those ideas in a small library intended to be useful beyond a single course
+exercise.
 
----
+## Current scope
 
-## Memory Model
+The library currently provides two closely related components:
 
-- All inserted items are deeply copied into separately allocated heap memory.
-- Stack-allocated or heap-allocated objects are both safe to insert; the calist duplicates them internally.
-- Stored items are automatically freed when individually removed or when the calist is destroyed.
-- Clients are responsible for freeing the original heap-allocated objects after insertion to avoid memory leaks.
+- `ctype` describes a value type through its size and callbacks for copying,
+  destruction, comparison, and printing. Built-in descriptors are provided for
+  common C types, including integers, floating-point values, booleans, and
+  strings.
+- `calist` is a generic dynamic array. It supports indexed access, insertion,
+  batch operations, replacement, removal, filtering, slicing, deduplication,
+  sorting, searching, copying, and equality checks.
 
----
+The implementation has no third-party runtime dependencies and is built as a
+small static library. The public API is deliberately centered on ordinary C
+values and pointers, so it can be included in another CMake project without
+introducing a large framework.
 
-## Example Usage (examples/demo_calist_int.c)
+## Ownership and API behavior
+
+`calist` copies every value through the associated `ctype` when that value is
+inserted. The list owns the copy and destroys it when the value is removed or
+when the list itself is destroyed. The caller remains responsible for the
+original object passed to the API.
+
+Pointers returned by `calist_get` and `calist_get_mutable` are borrowed. They
+must not be freed by the caller and should not be used after a structural
+change to the list, such as insertion, removal, or reallocation.
+
+The current API treats invalid use as a programming error:
+
+- Index-based access, replacement, and removal require an index within the
+  current list bounds. Insertion accepts an index from `0` through the current
+  size, inclusive.
+- Null pointers and incompatible type descriptors violate API preconditions.
+- Precondition violations call `abort()` with a diagnostic.
+- Allocation and duplication failures terminate the process with failure.
+
+This behavior is intentional in the current design. The API does not expose
+recoverable error codes for programmer errors or allocation failures, which
+keeps normal container operations compact while making misuse fail immediately.
+
+## A small example
 
 ```c
-// Demonstration of calist usage.
-
-#include <stdlib.h>
-#include <stdbool.h>
 #include <assert.h>
+
 #include "calist.h"
 
-// Append stack-allocated, temporary values to al
-static void calist_append_stack(calist *al) {
-  int a = 5;
-  const int b = 10;
-  calist_append(al, &a);    // a is deep-copied into al
-  calist_add(al, &b);       // 'calist_add' is an alias for 'calist_append'
-  // a and b can now safely exit the stack frame
-
-  // 'WRAP_INT' adds a stack-allocated integer without a variable
-  calist_append(al, WRAP_INT(20));
-}
-
-// Append heap-allocated objects to al
-static void calist_append_heap(calist *al) {
-  int *ptr = malloc(sizeof(*ptr));
-  *ptr = 30;
-  calist_append(al, ptr);   // ptr is deep-copied into al
-  free(ptr);                // Client must free original pointer
-}
-
-// Check if num is even
-static bool is_even(const calist *al, const void *item, const void *args) {
-  const int *int_item = item;
-  return (*int_item % 2 == 0);
-}
-
-// Multiply the value of num by 3
-static void multiply(const calist *al, void *item, const void *args) {
-  int *int_ptr = item;
-  const int *factor = args;
-  *int_ptr *= (*factor);
-}
-
 int main(void) {
-  // Create an integer calist ['ctype_int' is included in ctype.h]
-  calist *al = calist_create(ctype_int());
-  
-  // Append integers to the back of al
-  calist_append_stack(al);
-  calist_append_heap(al);
-  
-  // Print al to the console
-  calist_print(al);         // Console: [5, 10, 20, 30]
-  // Get the size of al
-  assert(calist_size(al) == 4);
+  calist *numbers = calist_create(ctype_int());
 
-  // Inserting integers before index positions
-  calist_insert(al, 2, WRAP_INT(5));      // al: [5, 10, 5, 20, 30]
-  calist_insert(al, 3, WRAP_INT(25));     // al: [5, 10, 5, 25, 20, 30]
-  calist_insert_front(al, WRAP_INT(35));  // al: [35, 5, 10, 5, 25, 20, 30]
+  calist_append(numbers, WRAP_INT(30));
+  calist_append(numbers, WRAP_INT(10));
+  calist_append(numbers, WRAP_INT(20));
 
-  // Duplicate al
-  calist *al_copy = calist_dup(al);
-  calist_print(al_copy);    // Console: [35, 5, 10, 5, 25, 20, 30]
-  // Comparing al and al_copy for equality
-  assert(calist_equals(al, al_copy));
+  calist_qsort(numbers);
+  assert(*(const int *)calist_get(numbers, 0) == 10);
 
-  // Remove the item at index position 2
-  calist_pop(al, 2);                    // al: [35, 5, 5, 25, 20, 30]
-  // Remove the first item with the value 25
-  calist_remove(al, WRAP_INT(25));      // al: [35, 5, 5, 20, 30]
-  // Remove all items with the value 5
-  calist_remove_all(al, WRAP_INT(5));   // al: [35, 20, 30]
-  // Remove all even integers from al
-  calist_remove_if(al, is_even, NULL);  // al: [35]
-  calist_print(al);         // Console: [35]
-  
-  // Remove all elements from al, but al is kept
-  calist_clear(al);
-  calist_print(al);         // Console: []
-
-  // Add previous items from the copy
-  calist_append_all(al, al_copy);  
-  calist_print(al);         // Console: [35, 5, 10, 5, 25, 20, 30]
-  calist_destroy(al_copy);  // Destroy al_copy and its content
-
-  // Check if integers are in al
-  assert(calist_contains(al, WRAP_INT(10)));
-  assert(!calist_contains(al, WRAP_INT(99)));
-  // First occurrence of 5 is at index position 1
-  assert(calist_index(al, WRAP_INT(5)) == 1);
-  // Last occurrence of 5 is at index position 3
-  assert(calist_index_last(al, WRAP_INT(5)) == 3);
-  // 'CALIST_INDEX_NOT_FOUND': 99 is not in al
-  assert(calist_index(al, WRAP_INT(99)) == CALIST_INDEX_NOT_FOUND);
-  // Count the number of occurrences
-  assert(calist_count(al, WRAP_INT(5)) == 2);
-  assert(calist_count(al, WRAP_INT(99)) == 0);
-  
-  // Access and mutate items at specific index positions
-  // Get the item at index position 2
-  const int *item = calist_get(al, 2);
-  assert(*item == 10);
-  // Modify the item at index position 0
-  int *item_mutable = calist_get_mutable(al, 0);
-  *item_mutable = 40;
-  // Set the item at index position 5
-  calist_set(al, 5, WRAP_INT(25));
-  calist_print(al);         // Console: [40, 5, 10, 5, 25, 25, 30]
-
-  // Quick sort algorithm
-  calist_qsort(al);         
-  calist_print(al);         // Console: [5, 5, 10, 25, 25, 30, 40]
-  // Binary search on the sorted list
-  assert(calist_bsearch(al, WRAP_INT(30)) != CALIST_INDEX_NOT_FOUND);
-  assert(calist_bsearch(al, WRAP_INT(99)) == CALIST_INDEX_NOT_FOUND);
-  // Reverse the list
-  calist_reverse(al);
-  calist_print(al);         // Console: [40, 30, 25, 25, 10, 5, 5]
-  // Multiply all items by 3
-  calist_foreach(al, multiply, WRAP_INT(3));
-  calist_print(al);         // Console: [120, 90, 75, 75, 30, 15, 15]
-
-  // Find unique elements and remove duplicates
-  al_copy = calist_unique(al);
-  calist_print(al_copy);    // Console: [120, 90, 75, 30, 15]
-  assert(calist_remove_dup(al) == 2);
-  calist_print(al);         // Console: [120, 90, 75, 30, 15]
-  assert(calist_equals(al, al_copy));
-
-  // IMPORTANT: free al and al_copy to prevent memory leak
-  calist_destroy(al);
-  calist_destroy(al_copy);
-  calist_destroy(NULL);     // Also safe
+  calist_destroy(numbers);
+  return 0;
 }
+```
+
+The list copies each integer when it is added, so the temporary values are
+safe to use and the list cleans up its own storage when it is destroyed.
+
+## Build and test
+
+The standalone project uses CMake 3.21 or newer:
+
+```sh
+cmake -S . -B build-cmake -DCMAKE_BUILD_TYPE=Debug
+cmake --build build-cmake
+ctest --test-dir build-cmake --output-on-failure
+```
+
+For a standalone checkout, the same build-and-test workflow is available as
+the `tests` target:
+
+```sh
+cmake --build build-cmake --target tests
+```
+
+By default, tests are enabled for a standalone checkout and disabled when the
+project is added as a subdirectory. They can be controlled explicitly with
+`CSTORAGE_KIT_BUILD_TESTS`. Examples are opt-in with
+`CSTORAGE_KIT_BUILD_EXAMPLES`.
+
+For AddressSanitizer and UndefinedBehaviorSanitizer checks, use a separate
+build directory:
+
+```sh
+cmake -S . -B build-sanitize \
+  -DCMAKE_BUILD_TYPE=Debug \
+  -DCSTORAGE_KIT_ENABLE_SANITIZERS=ON
+cmake --build build-sanitize
+ctest --test-dir build-sanitize --output-on-failure
+```
+
+On platforms where AddressSanitizer leak detection is unavailable, run the
+tests with `ASAN_OPTIONS=detect_leaks=0`.
+
+## Use as a submodule
+
+c-storage-kit is designed to be easy to include in another CMake project:
+
+```cmake
+add_subdirectory(external/c-storage-kit cstorage_kit EXCLUDE_FROM_ALL)
+target_link_libraries(my_app PRIVATE CStorageKit::Core)
+```
+
+When included this way, the parent project gets the library target without
+pulling the test executables into its normal build.
+
+The library can also be installed and consumed through its generated CMake
+export:
+
+```sh
+cmake -S . -B build-cmake
+cmake --build build-cmake
+cmake --install build-cmake --prefix /path/to/install
+```
+
+## Future direction
+
+I’m continuing to explore a heterogeneous list that can hold values of
+different types, inspired by dynamically typed languages such as Python. I
+also want to build more structures—including linked lists, dictionaries,
+stacks, queues, and trees—with consistent interfaces, generic typing, and
+careful memory management.
+
+c-storage-kit is still evolving, but its direction is clear: apply the
+abstraction and data-structure principles I learned in CS 136 to a practical,
+modern, and lightweight toolkit for C.
