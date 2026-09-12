@@ -2,23 +2,12 @@ cmake_minimum_required(VERSION 3.21)
 
 project(cstorage_kit
     VERSION 0.1.0
-    DESCRIPTION "A lightweight generic C storage utility"
+    DESCRIPTION "A lightweight C library for generic storage abstractions"
     LANGUAGES C
 )
 
 include(GNUInstallDirs)
 
-set(CSTORAGE_KIT_STANDALONE OFF)
-set(CSTORAGE_KIT_BUILD_TESTS_DEFAULT OFF)
-if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
-    set(CSTORAGE_KIT_STANDALONE ON)
-    set(CSTORAGE_KIT_BUILD_TESTS_DEFAULT ON)
-endif()
-
-option(CSTORAGE_KIT_BUILD_TESTS
-    "Build the cstorage-kit test executables"
-    ${CSTORAGE_KIT_BUILD_TESTS_DEFAULT}
-)
 option(CSTORAGE_KIT_BUILD_EXAMPLES "Build the cstorage-kit examples" OFF)
 option(CSTORAGE_KIT_ENABLE_SANITIZERS
     "Build with AddressSanitizer and UndefinedBehaviorSanitizer"
@@ -59,11 +48,6 @@ if(CSTORAGE_KIT_ENABLE_SANITIZERS AND
         -fno-omit-frame-pointer
     )
     target_link_options(cstorage_kit PUBLIC -fsanitize=address,undefined)
-endif()
-
-if(CSTORAGE_KIT_BUILD_TESTS)
-    enable_testing()
-    add_subdirectory(tests)
 endif()
 
 if(CSTORAGE_KIT_BUILD_EXAMPLES)
