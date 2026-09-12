@@ -6,7 +6,6 @@
 #ifndef CTYPE_H
 #define CTYPE_H
 
-#include <stddef.h>
 #include <stdbool.h>
 
 #ifdef __cplusplus

@@ -177,14 +177,14 @@ void *calist_get_mutable(const calist *al, size_t index);
 //           0 <= index < calist_size(al)
 //           new_item is not NULL
 // effects: modifies al [replaces the old item]
-void calist_set(calist *al, size_t index, const void *new_item);
+void calist_set(const calist *al, size_t index, const void *new_item);
 
 // calist_swap(al, i, j) swaps the items at index positions i and j in al.
 // requires: al is not NULL and not empty
 //           0 <= i < calist_size(al)
 //           0 <= j < calist_size(al)
 // effects: modifies al
-void calist_swap(calist *al, size_t i, size_t j);
+void calist_swap(const calist *al, size_t i, size_t j);
 
 // calist_append(al, item) adds item to the back of al.
 // requires: al and item are not NULL
@@ -300,7 +300,7 @@ size_t calist_count(const calist *al, const void *item);
 // effects: may modify al [replaces old_item if found]
 // note: returns the index position of old_item, or 
 //       CALIST_INDEX_NOT_FOUND if old_item is not in al
-size_t calist_replace(calist *al, const void *old_item, 
+size_t calist_replace(const calist *al, const void *old_item,
                       const void *new_item);
 
 // calist_replace_last(al, old_item, new_item) replaces the last occurrence 
@@ -309,7 +309,7 @@ size_t calist_replace(calist *al, const void *old_item,
 // effects: may modify al [replaces old_item if found]
 // note: returns the index position of old_item, or 
 //       CALIST_INDEX_NOT_FOUND if old_item is not in al
-size_t calist_replace_last(calist *al, const void *old_item, 
+size_t calist_replace_last(const calist *al, const void *old_item,
                            const void *new_item);
 
 // calist_replace_all(al, old_item, new_item) replaces all occurrences of 
@@ -317,7 +317,7 @@ size_t calist_replace_last(calist *al, const void *old_item,
 // requires: al, old_item, and new_item are not NULL
 // effects: may modify al [replaces old_item if found]
 // note: returns the number of items replaced
-size_t calist_replace_all(calist *al, const void *old_item, 
+size_t calist_replace_all(const calist *al, const void *old_item,
                           const void *new_item);
 
 // calist_replace_if(al, new_item, pred, args) replaces all items in al
@@ -326,7 +326,7 @@ size_t calist_replace_all(calist *al, const void *old_item,
 // requires: al, old_item, and new_item are not NULL
 // effects: may modify al [replaces old_item if found]
 // note: returns the number of items replaced
-size_t calist_replace_if(calist *al, const void *new_item, 
+size_t calist_replace_if(const calist *al, const void *new_item,
                          calist_pred pred, const void *args);
 
 // calist_qsort(al) sorts al using the quicksort algorithm.
@@ -343,7 +343,7 @@ size_t calist_bsearch(const calist *al, const void *item);
 // calist_reverse(al) reverses the order of items in al.
 // requires: al is not NULL
 // effects: modifies al
-void calist_reverse(calist *al);
+void calist_reverse(const calist *al);
 
 // calist_slice(al, from_index, to_index) creates a sublist of al containing
 //   items from index position from_index to (to_index - 1), inclusive.
