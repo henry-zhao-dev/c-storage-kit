@@ -42,7 +42,6 @@ extern "C" {
 //   calist_append(al, ptr);    // Deep-copied into calist
 //   free(ptr);                 // Client must free original pointer
 //
-// See 'examples/demo_calist_*.c' for a full demonstration of calist usage.
 typedef struct calist calist;
 
 // calist_pred is a predicate function that checks whether the given item 

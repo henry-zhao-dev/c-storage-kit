@@ -95,10 +95,14 @@ the `tests` target:
 cmake --build build-cmake --target tests
 ```
 
+The unit tests are split by responsibility under `tests/`: type behavior,
+ownership, list lifecycle, bulk operations, queries, and transformations.
+Invalid API calls are covered by separate CTest cases that verify the expected
+assertion diagnostics.
+
 By default, tests are enabled for a standalone checkout and disabled when the
 project is added as a subdirectory. They can be controlled explicitly with
-`CSTORAGE_KIT_BUILD_TESTS`. Examples are opt-in with
-`CSTORAGE_KIT_BUILD_EXAMPLES`.
+`CSTORAGE_KIT_BUILD_TESTS`.
 
 For AddressSanitizer and UndefinedBehaviorSanitizer checks, use a separate
 build directory:
