@@ -2,7 +2,6 @@
 
 #include "calist.h"
 #include "cvalue.h"
-
 #include "test_helpers.h"
 
 static void test_append_and_insert_all(void) {

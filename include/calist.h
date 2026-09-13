@@ -3,6 +3,9 @@
 #ifndef CALIST_H
 #define CALIST_H
 
+#include <stdbool.h>
+#include <stddef.h>
+
 #include "cvalue.h"
 
 #ifdef __cplusplus
@@ -24,13 +27,13 @@ extern "C" {
 // printing, and deallocation) are handled through the cvalue interface.
 //
 // Memory model:
-//   - All inserted items are deeply copied into separately allocated 
+//   - All inserted items are deeply copied into separately allocated
 //     heap memory.
 //   - Stack-allocated or heap-allocated objects are both safe to insert;
 //     the calist duplicates them internally.
 //   - Stored items are automatically freed when individually removed or
 //     when the calist is destroyed.
-//   - Clients are responsible for freeing the original heap-allocated 
+//   - Clients are responsible for freeing the original heap-allocated
 //     objects after insertion to avoid memory leaks.
 //
 // Example:
@@ -44,7 +47,7 @@ extern "C" {
 //
 typedef struct calist calist;
 
-// calist_pred is a predicate function that checks whether the given item 
+// calist_pred is a predicate function that checks whether the given item
 //   in al satisfies specific conditions.
 // parameters:
 //   - al: the calist containing the item (may be used for context or ignored)
@@ -53,23 +56,20 @@ typedef struct calist calist;
 //           user-defined struct containing additional predicate parameters
 // requires: al and item are not NULL
 // note: returns true if item satisfies the conditions; false otherwise
-typedef bool (*calist_pred)(const calist *al, 
-                            const void *item, 
+typedef bool (*calist_pred)(const calist *al, const void *item,
                             const void *args);
 
-// calist_map is a mapping function that optionally modifies the given item 
-//   in al. The function may choose to mutate item or simply read it, 
+// calist_map is a mapping function that optionally modifies the given item
+//   in al. The function may choose to mutate item or simply read it,
 //   depending on args or internal logic.
 // parameters:
 //   - al: the calist containing the item (may be used for context or ignored)
 //   - item: a mutable pointer to the item to be optionally modified
-//   - args: optional external data (may be NULL); typically a pointer to a 
+//   - args: optional external data (may be NULL); typically a pointer to a
 //           user-defined struct with transformation parameters
 // requires: al and item are not NULL
 // effects: may modify item
-typedef void (*calist_map)(const calist *al, 
-                           void *item, 
-                           const void *args);
+typedef void (*calist_map)(const calist *al, void *item, const void *args);
 
 // The return value if an item is not in calist (SIZE_MAX)
 extern const size_t CALIST_INDEX_NOT_FOUND;
@@ -82,7 +82,7 @@ extern const size_t CALIST_INDEX_NOT_FOUND;
 #define calist_find calist_index
 #define calist_find_last calist_index_last
 
-// calist_create(type) creates an empty calist which stores items of 
+// calist_create(type) creates an empty calist which stores items of
 //   the given type.
 // requires: type is not NULL
 // effects: allocates heap memory [caller must free with calist_destroy]
@@ -113,13 +113,13 @@ void calist_clear(calist *al);
 // effects: allocates heap memory [caller must free with calist_destroy]
 calist *calist_dup(const calist *al);
 
-// calist_print(al) displays al in the format [X, Y, ...], where 
+// calist_print(al) displays al in the format [X, Y, ...], where
 //   X, Y, ... are items of al.
 // requires: al is not NULL
 // effects: produces output
 void calist_print(const calist *al);
 
-// calist_equals(l1, l2) produces true if l1 and l2 have identical size, 
+// calist_equals(l1, l2) produces true if l1 and l2 have identical size,
 //   type, and items; false otherwise.
 // requires: l1 and l2 are not NULL
 bool calist_equals(const calist *l1, const calist *l2);
@@ -136,7 +136,7 @@ size_t calist_size(const calist *al);
 // requires: al is not NULL
 bool calist_empty(const calist *al);
 
-// calist_capacity(al) produces the maximum number of items 
+// calist_capacity(al) produces the maximum number of items
 //   currently allocated for al.
 // requires: al is not NULL
 size_t calist_capacity(const calist *al);
@@ -153,17 +153,17 @@ void calist_reserve(calist *al, size_t n);
 // note: if al's capacity is equal to al's size, calist_reclaim has no effect
 void calist_reclaim(calist *al);
 
-// calist_get(al, index) produces a constant pointer to the item 
+// calist_get(al, index) produces a constant pointer to the item
 //   at the given index position in al.
 // requires: al is not NULL and not empty
 //           0 <= index < calist_size(al)
 // notes:
-//   - calist_get protects the contents of al by returning a 
+//   - calist_get protects the contents of al by returning a
 //     constant pointer, preventing direct modification
 //   - call calist_get_mutable to modify an item in-place
 const void *calist_get(const calist *al, size_t index);
 
-// calist_get_mutable(al, index) produces a mutable pointer to the item 
+// calist_get_mutable(al, index) produces a mutable pointer to the item
 //   at the given index position in al.
 // requires: al is not NULL and not empty
 //           0 <= index < calist_size(al)
@@ -171,7 +171,7 @@ const void *calist_get(const calist *al, size_t index);
 //          result in a double free when removing the item or destroying al.
 void *calist_get_mutable(const calist *al, size_t index);
 
-// calist_set(al, index, new_item) replaces the old item at the given 
+// calist_set(al, index, new_item) replaces the old item at the given
 //   index position in al with new_item.
 // requires: al is not NULL and not empty
 //           0 <= index < calist_size(al)
@@ -196,7 +196,7 @@ void calist_append(calist *al, const void *item);
 // effects: modifies al, allocates heap memory
 void calist_append_all(calist *al, const calist *src);
 
-// calist_insert(al, index, item) inserts item before the given index 
+// calist_insert(al, index, item) inserts item before the given index
 //   position in al (shifting existing items to the right).
 // requires: al and item are not NULL
 //           0 <= index <= calist_size(al)
@@ -208,7 +208,7 @@ void calist_insert(calist *al, size_t index, const void *item);
 // effects: modifies al, allocates heap memory
 void calist_insert_front(calist *al, const void *item);
 
-// calist_insert_all(al, index, src) inserts all items in src before the 
+// calist_insert_all(al, index, src) inserts all items in src before the
 //   given index position in al.
 // requires: al and src are not NULL and have the same type
 //           0 <= index <= calist_size(al)
@@ -225,7 +225,7 @@ void calist_pop(calist *al, size_t index);
 // requires: al is not NULL and not empty
 //           item is not NULL
 // effects: modifies al, frees heap memory
-// note: returns the index position of item in al 
+// note: returns the index position of item in al
 //       and CALIST_INDEX_NOT_FOUND otherwise
 size_t calist_remove(calist *al, const void *item);
 
@@ -233,7 +233,7 @@ size_t calist_remove(calist *al, const void *item);
 // requires: al is not NULL and not empty
 //           item is not NULL
 // effects: modifies al, frees heap memory
-// note: returns the index position of item in al 
+// note: returns the index position of item in al
 //       and CALIST_INDEX_NOT_FOUND otherwise
 size_t calist_remove_last(calist *al, const void *item);
 
@@ -270,7 +270,7 @@ bool calist_contains(const calist *al, const void *item);
 // requires: al and item are not NULL
 size_t calist_index(const calist *al, const void *item);
 
-// calist_index_last(al, item) produces the last index position of item 
+// calist_index_last(al, item) produces the last index position of item
 //   in al and CALIST_INDEX_NOT_FOUND if item is not in al.
 // requires: al and item are not NULL
 size_t calist_index_last(const calist *al, const void *item);
@@ -282,37 +282,37 @@ size_t calist_index_last(const calist *al, const void *item);
 calist *calist_index_all(const calist *al, const void *item);
 
 // calist_index_all_if(al, pred, args) produces a calist of cvalue_size_t()
-//   containing the index positions of all items in al that satisfy pred, 
+//   containing the index positions of all items in al that satisfy pred,
 //   where args provides additional arguments to the pred function.
 // requires: al and pred are not NULL
 // effects: allocates heap memory [caller must free with calist_destroy]
-calist *calist_index_all_if(const calist *al, calist_pred pred, 
+calist *calist_index_all_if(const calist *al, calist_pred pred,
                             const void *args);
 
-// calist_count(al, item) produces the total number of occurrences 
+// calist_count(al, item) produces the total number of occurrences
 //   of item in al.
 // requires: al and item are not NULL
 size_t calist_count(const calist *al, const void *item);
 
-// calist_replace(al, old_item, new_item) replaces the first occurrence of 
+// calist_replace(al, old_item, new_item) replaces the first occurrence of
 //   old_item in al with new_item.
 // requires: al, old_item, and new_item are not NULL
 // effects: may modify al [replaces old_item if found]
-// note: returns the index position of old_item, or 
+// note: returns the index position of old_item, or
 //       CALIST_INDEX_NOT_FOUND if old_item is not in al
 size_t calist_replace(const calist *al, const void *old_item,
                       const void *new_item);
 
-// calist_replace_last(al, old_item, new_item) replaces the last occurrence 
+// calist_replace_last(al, old_item, new_item) replaces the last occurrence
 //   of old_item in al with new_item.
 // requires: al, old_item, and new_item are not NULL
 // effects: may modify al [replaces old_item if found]
-// note: returns the index position of old_item, or 
+// note: returns the index position of old_item, or
 //       CALIST_INDEX_NOT_FOUND if old_item is not in al
 size_t calist_replace_last(const calist *al, const void *old_item,
                            const void *new_item);
 
-// calist_replace_all(al, old_item, new_item) replaces all occurrences of 
+// calist_replace_all(al, old_item, new_item) replaces all occurrences of
 //   old_item in al with new_item.
 // requires: al, old_item, and new_item are not NULL
 // effects: may modify al [replaces old_item if found]
@@ -354,25 +354,25 @@ void calist_reverse(const calist *al);
 calist *calist_slice(const calist *al, size_t from_index, size_t to_index);
 
 // calist_filter(al, pred, args) produces a calist containing items in al
-//   filtered by pred, where args provides additional arguments to the 
+//   filtered by pred, where args provides additional arguments to the
 //   pred function.
 // requires: al and pred are not NULL
 // effects: allocates heap memory [caller must free with calist_destroy]
 calist *calist_filter(const calist *al, calist_pred pred, const void *args);
 
-// calist_foreach(al, map, args) applies map to each item in al, where args 
+// calist_foreach(al, map, args) applies map to each item in al, where args
 //   provides additional arguments to the map function.
 // requires: al and map are not NULL
 // effects: may modify item [see calist_map documentation]
 void calist_foreach(const calist *al, calist_map map, const void *args);
 
-// calist_unique(al) produces a calist containing unique items in al, 
+// calist_unique(al) produces a calist containing unique items in al,
 //   preserving the original order.
 // requires: al is not NULL
 // effects: allocates heap memory [caller must free with calist_destroy]
 calist *calist_unique(const calist *al);
 
-// calist_remove_dup(al) removes all duplicate items from al, keeping only 
+// calist_remove_dup(al) removes all duplicate items from al, keeping only
 //   the first occurrence of each item.
 // requires: al is not NULL
 // effects: modifies al, frees heap memory

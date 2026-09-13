@@ -3,7 +3,6 @@
 
 #include "calist.h"
 #include "cvalue.h"
-
 #include "test_helpers.h"
 
 static void test_creation_and_access(void) {

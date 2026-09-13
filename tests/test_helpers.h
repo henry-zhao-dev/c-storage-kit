@@ -6,8 +6,7 @@
 #include "calist.h"
 #include "cvalue.h"
 
-static void assert_int_list(const calist *list,
-                            const int *expected,
+static void assert_int_list(const calist *list, const int *expected,
                             size_t size) {
   assert(calist_size(list) == size);
   for (size_t i = 0; i < size; ++i) {
@@ -15,8 +14,7 @@ static void assert_int_list(const calist *list,
   }
 }
 
-static void assert_size_t_list(const calist *list,
-                               const size_t *expected,
+static void assert_size_t_list(const calist *list, const size_t *expected,
                                size_t size) {
   assert(calist_size(list) == size);
   assert(cvalue_equals(calist_type(list), cvalue_size_t()));

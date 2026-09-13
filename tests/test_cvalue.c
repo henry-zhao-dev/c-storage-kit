@@ -71,7 +71,7 @@ static void test_custom_type_callbacks(void) {
   custom_print_calls = 0;
 
   cvalue *custom = cvalue_create(sizeof(int), duplicate_int, destroy_int,
-                               print_int_without_output, compare_int);
+                                 print_int_without_output, compare_int);
   const int value = 42;
   int *value_copy = data_dup(&value, custom);
 

@@ -2,7 +2,6 @@
 
 #include "calist.h"
 #include "cvalue.h"
-
 #include "test_helpers.h"
 
 static bool is_even(const calist *list, const void *item, const void *args) {

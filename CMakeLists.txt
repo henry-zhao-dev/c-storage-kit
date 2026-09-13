@@ -22,6 +22,8 @@ option(CSTORAGE_KIT_ENABLE_SANITIZERS
     OFF
 )
 
+find_program(CLANG_FORMAT_EXECUTABLE NAMES clang-format)
+
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_C_EXTENSIONS OFF)
@@ -61,6 +63,32 @@ endif()
 if(CSTORAGE_KIT_BUILD_TESTS)
     enable_testing()
     add_subdirectory(tests)
+endif()
+
+if(CLANG_FORMAT_EXECUTABLE)
+    file(GLOB_RECURSE CSTORAGE_KIT_FORMAT_SOURCES CONFIGURE_DEPENDS
+        "${CMAKE_CURRENT_SOURCE_DIR}/include/*.h"
+        "${CMAKE_CURRENT_SOURCE_DIR}/src/*.c"
+        "${CMAKE_CURRENT_SOURCE_DIR}/tests/*.c"
+        "${CMAKE_CURRENT_SOURCE_DIR}/tests/*.h"
+    )
+
+    add_custom_target(format
+        COMMAND ${CLANG_FORMAT_EXECUTABLE} --style=file -i ${CSTORAGE_KIT_FORMAT_SOURCES}
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        COMMENT "Formatting c-storage-kit sources"
+        VERBATIM
+    )
+
+    add_custom_target(format-check
+        COMMAND ${CLANG_FORMAT_EXECUTABLE} --style=file --dry-run --Werror
+            ${CSTORAGE_KIT_FORMAT_SOURCES}
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        COMMENT "Checking c-storage-kit formatting"
+        VERBATIM
+    )
+else()
+    message(STATUS "clang-format not found; format targets are unavailable")
 endif()
 
 install(TARGETS cstorage_kit

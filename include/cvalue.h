@@ -1,6 +1,6 @@
-// The cvalue module provides the cvalue ADT, which is essential for 
-//   implementing generic storage ADTs. The module also provides 
-//   predefined cvalue instances for common built-in data types 
+// The cvalue module provides the cvalue ADT, which is essential for
+//   implementing generic storage ADTs. The module also provides
+//   predefined cvalue instances for common built-in data types
 //   (int, double, char, etc.)
 
 #ifndef CVALUE_H
@@ -31,23 +31,21 @@ typedef struct cvalue cvalue;
 
 // Wrap stack variables to temporary pointers for generic storage ADTs
 // === Integral types ===
-#define WRAP_INT(i) (&(int) {i})
-#define WRAP_LONG(l) (&(long) {l})
-#define WRAP_CHAR(c) (&(char) {c})
-#define WRAP_BOOL(b) (&(bool) {b})
-#define WRAP_SIZE_T(st) (&(size_t) {st})
+#define WRAP_INT(i) (&(int){i})
+#define WRAP_LONG(l) (&(long){l})
+#define WRAP_CHAR(c) (&(char){c})
+#define WRAP_BOOL(b) (&(bool){b})
+#define WRAP_SIZE_T(st) (&(size_t){st})
 // === Floating-point types ===
-#define WRAP_FLOAT(f) (&(float) {f})
-#define WRAP_DOUBLE(d) (&(double) {d})
+#define WRAP_FLOAT(f) (&(float){f})
+#define WRAP_DOUBLE(d) (&(double){d})
 
-// cvalue_create(size, dup, destroy, print, cmp) creates a cvalue 
+// cvalue_create(size, dup, destroy, print, cmp) creates a cvalue
 //   with the given attributes (see cvalue documentation above).
 // requires: dup, destroy, print, cmp are not NULL
 // effects: allocates heap memory [caller must free with cvalue_destroy]
-cvalue *cvalue_create(size_t size,
-                      void *(*dup)(const void *),
-                      void (*destroy)(void *),
-                      void (*print)(const void *),
+cvalue *cvalue_create(size_t size, void *(*dup)(const void *),
+                      void (*destroy)(void *), void (*print)(const void *),
                       int (*cmp)(const void *, const void *));
 
 // cvalue_destroy(type) frees type from the heap memory.
@@ -84,7 +82,7 @@ void data_destroy(void *value, const cvalue *type);
 void data_print(const void *value, const cvalue *type);
 
 // data_cmp(value1, value2, type) produces 0 if value1 and value2 are equal,
-//   a negative integer if value1 < value2, and a positive integer if 
+//   a negative integer if value1 < value2, and a positive integer if
 //   value1 > value2.
 // requires: value1, value2, and type are not NULL
 int data_cmp(const void *value1, const void *value2, const cvalue *type);

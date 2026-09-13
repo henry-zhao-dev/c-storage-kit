@@ -1,6 +1,7 @@
-#include <stdlib.h>
 #include "calist.h"
 #include "cerror.h"
+
+#include <stdlib.h>
 
 struct calist {
   void **data;
@@ -13,16 +14,14 @@ const size_t CALIST_INDEX_NOT_FOUND = SIZE_MAX;
 
 static const size_t DEFAULT_INIT_CAPACITY = 1;
 
-static const char *ASSERT_CALIST_NOT_EMPTY 
-  = "calist cannot be empty!";
-static const char *ASSERT_CALIST_SAME_TYPE 
-  = "calist must have the same type!";
-static const char *ASSERT_INDEX_BOUNDED 
-  = "index must be less than the size of calist!";
-static const char *ASSERT_INDEX_BOUNDED_INCLUSIVE 
-  = "index must not exceed the size of calist!";
-static const char *ASSERT_INDEX_END_AFTER_START
-  = "The ending index cannot be less than the starting index!";
+static const char *ASSERT_CALIST_NOT_EMPTY = "calist cannot be empty!";
+static const char *ASSERT_CALIST_SAME_TYPE = "calist must have the same type!";
+static const char *ASSERT_INDEX_BOUNDED =
+    "index must be less than the size of calist!";
+static const char *ASSERT_INDEX_BOUNDED_INCLUSIVE =
+    "index must not exceed the size of calist!";
+static const char *ASSERT_INDEX_END_AFTER_START =
+    "The ending index cannot be less than the starting index!";
 
 static const char *ERROR_ITEM_DUP = "Failed to duplicate item!";
 static const char *ERROR_SIZE_OVERFLOW = "Requested storage size is too large!";
@@ -66,7 +65,7 @@ calist *calist_create_size(const cvalue *type, const size_t init_cap) {
     free(al);
     ALLOC_ERROR("calist with the given capacity");
   }
-  
+
   al->type = type;
   al->size = 0;
   al->capacity = init_cap;
@@ -74,7 +73,8 @@ calist *calist_create_size(const cvalue *type, const size_t init_cap) {
 }
 
 void calist_destroy(calist *al) {
-  if (!al) return;
+  if (!al)
+    return;
 
   for (size_t i = 0; i < al->size; ++i) {
     data_destroy(al->data[i], al->type);
@@ -176,7 +176,8 @@ size_t calist_capacity(const calist *al) {
 void calist_reserve(calist *al, const size_t n) {
   ASSERT_NOT_NULL(al, NULL);
 
-  if (n <= al->capacity) return;
+  if (n <= al->capacity)
+    return;
   check_pointer_array_size(n);
 
   void **new_data = realloc(al->data, sizeof(void *) * n);
@@ -190,8 +191,9 @@ void calist_reserve(calist *al, const size_t n) {
 
 void calist_reclaim(calist *al) {
   ASSERT_NOT_NULL(al, NULL);
-  
-  if (al->size == al->capacity) return;
+
+  if (al->size == al->capacity)
+    return;
 
   if (al->size == 0) {
     free(al->data);
@@ -199,7 +201,7 @@ void calist_reclaim(calist *al) {
     al->capacity = 0;
     return;
   }
-  
+
   void **new_data = realloc(al->data, sizeof(void *) * al->size);
   if (!new_data) {
     FATAL_ERROR("Failed to reclaim the unused storage!");
@@ -415,8 +417,7 @@ size_t calist_remove_if(calist *al, calist_pred pred, const void *args) {
   return total;
 }
 
-void calist_remove_range(calist *al,
-                         const size_t from_index,
+void calist_remove_range(calist *al, const size_t from_index,
                          const size_t to_index) {
   ASSERT_NOT_NULL(al, NULL);
   ASSERT_MSG(al->size > 0, ASSERT_CALIST_NOT_EMPTY);
@@ -481,7 +482,7 @@ calist *calist_index_all(const calist *al, const void *item) {
   return indices;
 }
 
-calist *calist_index_all_if(const calist *al, calist_pred pred, 
+calist *calist_index_all_if(const calist *al, calist_pred pred,
                             const void *args) {
   ASSERT_NOT_NULL(al, NULL);
   ASSERT_NOT_NULL(pred, NULL);
@@ -607,8 +608,7 @@ void calist_reverse(const calist *al) {
   }
 }
 
-calist *calist_slice(const calist *al,
-                     const size_t from_index,
+calist *calist_slice(const calist *al, const size_t from_index,
                      const size_t to_index) {
   ASSERT_NOT_NULL(al, NULL);
   ASSERT_MSG(al->size > 0, ASSERT_CALIST_NOT_EMPTY);
@@ -674,9 +674,7 @@ size_t calist_remove_dup(calist *al) {
 }
 
 // Helper function implementation
-static void qsort_range(calist *al,
-                        const size_t first,
-                        const size_t last) {
+static void qsort_range(calist *al, const size_t first, const size_t last) {
   ASSERT_NOT_NULL(al, NULL);
 
   if (last <= first) {

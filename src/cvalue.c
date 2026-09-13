@@ -1,8 +1,8 @@
-#include <stdlib.h>
+#include "cerror.h"
+#include "cvalue.h"
+
 #include <stdio.h>
 #include <string.h>
-#include "cvalue.h"
-#include "cerror.h"
 
 struct cvalue {
   size_t size;
@@ -13,30 +13,30 @@ struct cvalue {
 };
 
 // Helper function declaration
-#define DEFINE_DUP(type) \
+#define DEFINE_DUP(type)                       \
   static void *dup_##type(const void *value) { \
-    ASSERT_NOT_NULL(value, NULL); \
-    void *copy = malloc(sizeof(type)); \
-    if (!copy) { \
-      return NULL; \
-    } \
-    memcpy(copy, value, sizeof(type)); \
-    return copy; \
+    ASSERT_NOT_NULL(value, NULL);              \
+    void *copy = malloc(sizeof(type));         \
+    if (!copy) {                               \
+      return NULL;                             \
+    }                                          \
+    memcpy(copy, value, sizeof(type));         \
+    return copy;                               \
   }
 
-#define DEFINE_PRINT(type, format) \
+#define DEFINE_PRINT(type, format)              \
   static void print_##type(const void *value) { \
-    ASSERT_NOT_NULL(value, NULL); \
-    const type *value_ptr = value; \
-    printf(format, *value_ptr); \
+    ASSERT_NOT_NULL(value, NULL);               \
+    const type *value_ptr = value;              \
+    printf(format, *value_ptr);                 \
   }
 
-#define DEFINE_CMP(type) \
-  static int cmp_##type(const void *value1, const void *value2) { \
-    ASSERT_NOT_NULL(value1, NULL); \
-    ASSERT_NOT_NULL(value2, NULL); \
-    const type *value1_ptr = value1; \
-    const type *value2_ptr = value2; \
+#define DEFINE_CMP(type)                                              \
+  static int cmp_##type(const void *value1, const void *value2) {     \
+    ASSERT_NOT_NULL(value1, NULL);                                    \
+    ASSERT_NOT_NULL(value2, NULL);                                    \
+    const type *value1_ptr = value1;                                  \
+    const type *value2_ptr = value2;                                  \
     return (*value1_ptr > *value2_ptr) - (*value1_ptr < *value2_ptr); \
   }
 
@@ -54,7 +54,7 @@ DEFINE_PRINT(char, "%c")
 DEFINE_CMP(char)
 
 DEFINE_DUP(bool)
-static void print_bool(const void *value);  // Print string "true" or "false"
+static void print_bool(const void *value); // Print string "true" or "false"
 DEFINE_CMP(bool)
 
 DEFINE_DUP(size_t)
@@ -75,10 +75,8 @@ static void *dup_string(const void *value);
 static int cmp_string(const void *value1, const void *value2);
 static void print_string(const void *value);
 
-cvalue *cvalue_create(const size_t size,
-                      void *(*dup)(const void *),
-                      void (*destroy)(void *),
-                      void (*print)(const void *),
+cvalue *cvalue_create(const size_t size, void *(*dup)(const void *),
+                      void (*destroy)(void *), void (*print)(const void *),
                       int (*cmp)(const void *, const void *)) {
   ASSERT_NOT_NULL(dup, NULL);
   ASSERT_NOT_NULL(destroy, NULL);
@@ -89,7 +87,7 @@ cvalue *cvalue_create(const size_t size,
   if (!type) {
     ALLOC_ERROR("cvalue");
   }
-  
+
   type->size = size;
   type->dup = dup;
   type->destroy = destroy;
@@ -146,55 +144,55 @@ int data_cmp(const void *value1, const void *value2, const cvalue *type) {
 // === Integral types ===
 const cvalue *cvalue_int(void) {
   static const cvalue int_type = {
-    .size = sizeof(int),
-    .dup = dup_int,
-    .destroy = free,
-    .print = print_int,
-    .cmp = cmp_int,
+      .size = sizeof(int),
+      .dup = dup_int,
+      .destroy = free,
+      .print = print_int,
+      .cmp = cmp_int,
   };
   return &int_type;
 }
 
 const cvalue *cvalue_long(void) {
   static const cvalue long_type = {
-    .size = sizeof(long),
-    .dup = dup_long,
-    .destroy = free,
-    .print = print_long,
-    .cmp = cmp_long,
+      .size = sizeof(long),
+      .dup = dup_long,
+      .destroy = free,
+      .print = print_long,
+      .cmp = cmp_long,
   };
   return &long_type;
 }
 
 const cvalue *cvalue_char(void) {
   static const cvalue char_type = {
-    .size = sizeof(char),
-    .dup = dup_char,
-    .destroy = free,
-    .print = print_char,
-    .cmp = cmp_char,
+      .size = sizeof(char),
+      .dup = dup_char,
+      .destroy = free,
+      .print = print_char,
+      .cmp = cmp_char,
   };
   return &char_type;
 }
 
 const cvalue *cvalue_bool(void) {
   static const cvalue bool_type = {
-    .size = sizeof(bool),
-    .dup = dup_bool,
-    .destroy = free,
-    .print = print_bool,
-    .cmp = cmp_bool,
+      .size = sizeof(bool),
+      .dup = dup_bool,
+      .destroy = free,
+      .print = print_bool,
+      .cmp = cmp_bool,
   };
   return &bool_type;
 }
 
 const cvalue *cvalue_size_t(void) {
   static const cvalue size_t_type = {
-    .size = sizeof(size_t),
-    .dup = dup_size_t,
-    .destroy = free,
-    .print = print_size_t,
-    .cmp = cmp_size_t,
+      .size = sizeof(size_t),
+      .dup = dup_size_t,
+      .destroy = free,
+      .print = print_size_t,
+      .cmp = cmp_size_t,
   };
   return &size_t_type;
 }
@@ -202,22 +200,22 @@ const cvalue *cvalue_size_t(void) {
 // === Floating-point types ===
 const cvalue *cvalue_float(void) {
   static const cvalue float_type = {
-    .size = sizeof(float),
-    .dup = dup_float,
-    .destroy = free,
-    .print = print_float,
-    .cmp = cmp_float,
+      .size = sizeof(float),
+      .dup = dup_float,
+      .destroy = free,
+      .print = print_float,
+      .cmp = cmp_float,
   };
   return &float_type;
 }
 
 const cvalue *cvalue_double(void) {
   static const cvalue double_type = {
-    .size = sizeof(double),
-    .dup = dup_double,
-    .destroy = free,
-    .print = print_double,
-    .cmp = cmp_double,
+      .size = sizeof(double),
+      .dup = dup_double,
+      .destroy = free,
+      .print = print_double,
+      .cmp = cmp_double,
   };
   return &double_type;
 }
@@ -225,11 +223,11 @@ const cvalue *cvalue_double(void) {
 // === String type ===
 const cvalue *cvalue_string(void) {
   static const cvalue string_type = {
-    .size = sizeof(char *),
-    .dup = dup_string,
-    .destroy = free,
-    .print = print_string,
-    .cmp = cmp_string,
+      .size = sizeof(char *),
+      .dup = dup_string,
+      .destroy = free,
+      .print = print_string,
+      .cmp = cmp_string,
   };
   return &string_type;
 }

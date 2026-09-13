@@ -118,6 +118,14 @@ ctest --test-dir build-sanitize --output-on-failure
 On platforms where AddressSanitizer leak detection is unavailable, run the
 tests with `ASAN_OPTIONS=detect_leaks=0`.
 
+The project uses clang-format with two-space indentation. With clang-format
+installed, format the library and tests or check formatting with:
+
+```sh
+cmake --build build-cmake --target format
+cmake --build build-cmake --target format-check
+```
+
 ## Use as a submodule
 
 c-storage-kit is designed to be easy to include in another CMake project:
