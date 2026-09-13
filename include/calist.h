@@ -3,14 +3,14 @@
 #ifndef CALIST_H
 #define CALIST_H
 
-#include "ctype.h"
+#include "cvalue.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 // API policy:
-//   - The calist owns every item returned by its ctype's dup callback.
+//   - The calist owns every item returned by its cvalue's dup callback.
 //   - Pointers returned by calist_get and calist_get_mutable are borrowed;
 //     do not free them, and do not use them after a structural modification.
 //   - Violating a documented precondition is a programming error and aborts.
@@ -19,9 +19,9 @@ extern "C" {
 // A calist stores items in a dynamically resizable array,
 // with all items deeply copied into heap memory.
 //
-// Each calist is associated with a specific ctype, defining a common type
+// Each calist is associated with a specific cvalue, defining a common type
 // for all stored items. Type-specific behaviors (duplication, comparison,
-// printing, and deallocation) are handled through the ctype interface.
+// printing, and deallocation) are handled through the cvalue interface.
 //
 // Memory model:
 //   - All inserted items are deeply copied into separately allocated 
@@ -47,7 +47,7 @@ typedef struct calist calist;
 // calist_pred is a predicate function that checks whether the given item 
 //   in al satisfies specific conditions.
 // parameters:
-//   - al: the calist containing item (may be used for context or ignored)
+//   - al: the calist containing the item (may be used for context or ignored)
 //   - item: the item to be tested
 //   - args: optional external data (may be NULL); typically a pointer to a
 //           user-defined struct containing additional predicate parameters
@@ -61,7 +61,7 @@ typedef bool (*calist_pred)(const calist *al,
 //   in al. The function may choose to mutate item or simply read it, 
 //   depending on args or internal logic.
 // parameters:
-//   - al: the calist containing item (may be used for context or ignored)
+//   - al: the calist containing the item (may be used for context or ignored)
 //   - item: a mutable pointer to the item to be optionally modified
 //   - args: optional external data (may be NULL); typically a pointer to a 
 //           user-defined struct with transformation parameters
@@ -86,14 +86,14 @@ extern const size_t CALIST_INDEX_NOT_FOUND;
 //   the given type.
 // requires: type is not NULL
 // effects: allocates heap memory [caller must free with calist_destroy]
-calist *calist_create(const ctype *type);
+calist *calist_create(const cvalue *type);
 
 // calist_create_size(type, init_cap) creates an empty calist of the
 //   given type with an initial capacity of init_cap.
 // requires: type is not NULL
 //           init_cap > 0
 // effects: allocates heap memory [caller must free with calist_destroy]
-calist *calist_create_size(const ctype *type, size_t init_cap);
+calist *calist_create_size(const cvalue *type, size_t init_cap);
 
 // calist_destroy(al) frees al and its items from the heap memory.
 // effects: frees heap memory [al becomes invalid]
@@ -124,9 +124,9 @@ void calist_print(const calist *al);
 // requires: l1 and l2 are not NULL
 bool calist_equals(const calist *l1, const calist *l2);
 
-// calist_type(al) produces the ctype of al.
+// calist_type(al) produces the cvalue descriptor associated with al.
 // requires: al is not NULL
-const ctype *calist_type(const calist *al);
+const cvalue *calist_type(const calist *al);
 
 // calist_size(al) produces the number of items in al.
 // requires: al is not NULL
@@ -244,7 +244,7 @@ size_t calist_remove_last(calist *al, const void *item);
 // note: returns the number of items removed
 size_t calist_remove_all(calist *al, const void *item);
 
-// calist_remove_if(al, pred, args) removes all items in al that satisfies 
+// calist_remove_if(al, pred, args) removes all items in al that satisfy
 //   pred, where args provides additional arguments to the pred function.
 // requires: al is not NULL and not empty
 //           pred is not NULL
@@ -275,13 +275,13 @@ size_t calist_index(const calist *al, const void *item);
 // requires: al and item are not NULL
 size_t calist_index_last(const calist *al, const void *item);
 
-// calist_index_all(al, item) produces a calist of ctype_size_t() containing 
+// calist_index_all(al, item) produces a calist of cvalue_size_t() containing
 //   the index positions of all occurrences of item in al.
 // requires: al and item are not NULL
 // effects: allocates heap memory [caller must free with calist_destroy]
 calist *calist_index_all(const calist *al, const void *item);
 
-// calist_index_all_if(al, pred, args) produces a calist of ctype_size_t() 
+// calist_index_all_if(al, pred, args) produces a calist of cvalue_size_t()
 //   containing the index positions of all items in al that satisfy pred, 
 //   where args provides additional arguments to the pred function.
 // requires: al and pred are not NULL
@@ -323,8 +323,8 @@ size_t calist_replace_all(const calist *al, const void *old_item,
 // calist_replace_if(al, new_item, pred, args) replaces all items in al
 //   that satisfy pred with new_item, where args provides additional
 //   arguments to the pred function.
-// requires: al, old_item, and new_item are not NULL
-// effects: may modify al [replaces old_item if found]
+// requires: al, new_item, and pred are not NULL
+// effects: may modify al [replaces items that satisfy pred]
 // note: returns the number of items replaced
 size_t calist_replace_if(const calist *al, const void *new_item,
                          calist_pred pred, const void *args);
@@ -373,7 +373,7 @@ void calist_foreach(const calist *al, calist_map map, const void *args);
 calist *calist_unique(const calist *al);
 
 // calist_remove_dup(al) removes all duplicate items from al, keeping only 
-//   the first occurrence of each value.
+//   the first occurrence of each item.
 // requires: al is not NULL
 // effects: modifies al, frees heap memory
 // note: returns the number of duplicate items removed

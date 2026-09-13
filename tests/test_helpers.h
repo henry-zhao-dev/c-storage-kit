@@ -4,7 +4,7 @@
 #include <assert.h>
 
 #include "calist.h"
-#include "ctype.h"
+#include "cvalue.h"
 
 static void assert_int_list(const calist *list,
                             const int *expected,
@@ -19,7 +19,7 @@ static void assert_size_t_list(const calist *list,
                                const size_t *expected,
                                size_t size) {
   assert(calist_size(list) == size);
-  assert(ctype_equals(calist_type(list), ctype_size_t()));
+  assert(cvalue_equals(calist_type(list), cvalue_size_t()));
   for (size_t i = 0; i < size; ++i) {
     assert(*(const size_t *)calist_get(list, i) == expected[i]);
   }

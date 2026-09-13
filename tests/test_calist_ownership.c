@@ -2,36 +2,36 @@
 #include <stdlib.h>
 
 #include "calist.h"
-#include "ctype.h"
+#include "cvalue.h"
 
 static size_t duplicate_calls;
 static size_t destroy_calls;
 static size_t print_calls;
 
-static void *duplicate_int(const void *item) {
+static void *duplicate_int(const void *value) {
   int *copy = malloc(sizeof(*copy));
   if (!copy) {
     return NULL;
   }
   ++duplicate_calls;
-  *copy = *(const int *)item;
+  *copy = *(const int *)value;
   return copy;
 }
 
-static void destroy_int(void *item) {
+static void destroy_int(void *value) {
   ++destroy_calls;
-  free(item);
+  free(value);
 }
 
-static void print_int_without_output(const void *item) {
-  (void)item;
+static void print_int_without_output(const void *value) {
+  (void)value;
   ++print_calls;
 }
 
-static int compare_int(const void *first, const void *second) {
-  const int first_value = *(const int *)first;
-  const int second_value = *(const int *)second;
-  return (first_value > second_value) - (first_value < second_value);
+static int compare_int(const void *value1, const void *value2) {
+  const int value1_int = *(const int *)value1;
+  const int value2_int = *(const int *)value2;
+  return (value1_int > value2_int) - (value1_int < value2_int);
 }
 
 int main(void) {
@@ -39,7 +39,7 @@ int main(void) {
   destroy_calls = 0;
   print_calls = 0;
 
-  ctype *custom = ctype_create(sizeof(int), duplicate_int, destroy_int,
+  cvalue *custom = cvalue_create(sizeof(int), duplicate_int, destroy_int,
                                print_int_without_output, compare_int);
   int value = 42;
   int *value_copy = data_dup(&value, custom);
@@ -62,6 +62,6 @@ int main(void) {
 
   calist_destroy(list);
   assert(destroy_calls == 3);
-  ctype_destroy(custom);
+  cvalue_destroy(custom);
   return EXIT_SUCCESS;
 }

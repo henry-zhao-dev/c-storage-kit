@@ -4,7 +4,7 @@
 #include "calist.h"
 
 int main(int argc, char **argv) {
-  calist *list = calist_create(ctype_int());
+  calist *list = calist_create(cvalue_int());
 
   if (argc != 2) {
     calist_destroy(list);
@@ -18,7 +18,7 @@ int main(int argc, char **argv) {
   } else if (strcmp(argv[1], "insert-bounds") == 0) {
     calist_insert(list, 1, WRAP_INT(1));
   } else if (strcmp(argv[1], "type-mismatch") == 0) {
-    calist *other = calist_create(ctype_long());
+    const calist *other = calist_create(cvalue_long());
     calist_append_all(list, other);
   }
 

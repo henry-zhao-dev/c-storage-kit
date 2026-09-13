@@ -1,16 +1,16 @@
 #include <stdlib.h>
 
 #include "calist.h"
-#include "ctype.h"
+#include "cvalue.h"
 
 #include "test_helpers.h"
 
 static void test_append_and_insert_all(void) {
-  calist *source = calist_create(ctype_int());
+  calist *source = calist_create(cvalue_int());
   calist_append(source, WRAP_INT(8));
   calist_append(source, WRAP_INT(9));
 
-  calist *list = calist_create(ctype_int());
+  calist *list = calist_create(cvalue_int());
   calist_append(list, WRAP_INT(1));
   calist_append(list, WRAP_INT(4));
   calist_append_all(list, source);
@@ -24,7 +24,7 @@ static void test_append_and_insert_all(void) {
 }
 
 static void test_self_append_and_insert(void) {
-  calist *list = calist_create(ctype_int());
+  calist *list = calist_create(cvalue_int());
   calist_append(list, WRAP_INT(5));
   calist_append(list, WRAP_INT(6));
 

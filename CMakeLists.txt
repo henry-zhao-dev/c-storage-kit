@@ -28,7 +28,7 @@ set(CMAKE_C_EXTENSIONS OFF)
 
 set(CSTORAGE_KIT_SOURCES
     src/calist.c
-    src/ctype.c
+    src/cvalue.c
 )
 
 add_library(cstorage_kit STATIC ${CSTORAGE_KIT_SOURCES})

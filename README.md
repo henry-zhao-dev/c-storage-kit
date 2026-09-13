@@ -1,8 +1,8 @@
 # c-storage-kit
 
 c-storage-kit is a lightweight C library for generic storage abstractions. Its
-current focus is `calist`, a dynamically resizable array with explicit value
-ownership and a reusable type interface.
+current focus is `calist`, a dynamically resizable array with explicit item
+ownership and a reusable value-type interface.
 
 The project grew out of ideas I first encountered in **CS 136: Elementary
 Algorithm Design and Data Abstraction** at the University of Waterloo. That
@@ -16,7 +16,7 @@ exercise.
 
 The library currently provides two closely related components:
 
-- `ctype` describes a value type through its size and callbacks for copying,
+- `cvalue` describes a value type through its size and callbacks for copying,
   destruction, comparison, and printing. Built-in descriptors are provided for
   common C types, including integers, floating-point values, booleans, and
   strings.
@@ -31,8 +31,8 @@ introducing a large framework.
 
 ## Ownership and API behavior
 
-`calist` copies every value through the associated `ctype` when that value is
-inserted. The list owns the copy and destroys it when the value is removed or
+`calist` copies every item through the associated `cvalue` when that item is
+inserted. The list owns the copy and destroys it when the item is removed or
 when the list itself is destroyed. The caller remains responsible for the
 original object passed to the API.
 
@@ -61,7 +61,7 @@ keeps normal container operations compact while making misuse fail immediately.
 #include "calist.h"
 
 int main(void) {
-  calist *numbers = calist_create(ctype_int());
+  calist *numbers = calist_create(cvalue_int());
 
   calist_append(numbers, WRAP_INT(30));
   calist_append(numbers, WRAP_INT(10));

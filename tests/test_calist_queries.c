@@ -2,7 +2,7 @@
 #include <stdlib.h>
 
 #include "calist.h"
-#include "ctype.h"
+#include "cvalue.h"
 
 #include "test_helpers.h"
 
@@ -13,8 +13,8 @@ static bool is_even(const calist *list, const void *item, const void *args) {
 }
 
 static void test_search_and_count(void) {
-  calist *list = calist_create(ctype_int());
-  int values[] = {4, 2, 4, 6, 4, 1};
+  calist *list = calist_create(cvalue_int());
+  const int values[] = {4, 2, 4, 6, 4, 1};
   for (size_t i = 0; i < sizeof(values) / sizeof(*values); ++i) {
     calist_append(list, &values[i]);
   }
@@ -39,8 +39,8 @@ static void test_search_and_count(void) {
 }
 
 static void test_filter_and_remove(void) {
-  calist *list = calist_create(ctype_int());
-  int values[] = {4, 2, 4, 6, 4, 1};
+  calist *list = calist_create(cvalue_int());
+  const int values[] = {4, 2, 4, 6, 4, 1};
   for (size_t i = 0; i < sizeof(values) / sizeof(*values); ++i) {
     calist_append(list, &values[i]);
   }

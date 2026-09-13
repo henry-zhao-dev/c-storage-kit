@@ -1,7 +1,7 @@
 #include <stdlib.h>
 
 #include "calist.h"
-#include "ctype.h"
+#include "cvalue.h"
 
 #include "test_helpers.h"
 
@@ -17,8 +17,8 @@ static void increment(const calist *list, void *item, const void *args) {
 }
 
 static void test_replacement_and_sorting(void) {
-  calist *list = calist_create(ctype_int());
-  int values[] = {4, 2, 4, 6, 4, 1};
+  calist *list = calist_create(cvalue_int());
+  const int values[] = {4, 2, 4, 6, 4, 1};
   for (size_t i = 0; i < sizeof(values) / sizeof(*values); ++i) {
     calist_append(list, &values[i]);
   }
@@ -46,8 +46,8 @@ static void test_replacement_and_sorting(void) {
 }
 
 static void test_unique_and_removal(void) {
-  calist *list = calist_create(ctype_int());
-  int values[] = {12, 2, 1, 1, 1};
+  calist *list = calist_create(cvalue_int());
+  const int values[] = {12, 2, 1, 1, 1};
   for (size_t i = 0; i < sizeof(values) / sizeof(*values); ++i) {
     calist_append(list, &values[i]);
   }

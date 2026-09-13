@@ -4,52 +4,52 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "ctype.h"
+#include "cvalue.h"
 
 static size_t custom_dup_calls;
 static size_t custom_destroy_calls;
 static size_t custom_print_calls;
 
-static void *duplicate_int(const void *item) {
+static void *duplicate_int(const void *value) {
   int *copy = malloc(sizeof(*copy));
   if (!copy) {
     return NULL;
   }
   ++custom_dup_calls;
-  *copy = *(const int *)item;
+  *copy = *(const int *)value;
   return copy;
 }
 
-static void destroy_int(void *item) {
+static void destroy_int(void *value) {
   ++custom_destroy_calls;
-  free(item);
+  free(value);
 }
 
-static void print_int_without_output(const void *item) {
-  (void)item;
+static void print_int_without_output(const void *value) {
+  (void)value;
   ++custom_print_calls;
 }
 
-static int compare_int(const void *first, const void *second) {
-  const int first_value = *(const int *)first;
-  const int second_value = *(const int *)second;
-  return (first_value > second_value) - (first_value < second_value);
+static int compare_int(const void *value1, const void *value2) {
+  const int value1_int = *(const int *)value1;
+  const int value2_int = *(const int *)value2;
+  return (value1_int > value2_int) - (value1_int < value2_int);
 }
 
 static void test_builtin_types(void) {
-  const ctype *integer = ctype_int();
+  const cvalue *integer = cvalue_int();
 
   assert(data_size(integer) == sizeof(int));
-  assert(data_size(ctype_long()) == sizeof(long));
-  assert(data_size(ctype_char()) == sizeof(char));
-  assert(data_size(ctype_bool()) == sizeof(bool));
-  assert(data_size(ctype_size_t()) == sizeof(size_t));
-  assert(data_size(ctype_float()) == sizeof(float));
-  assert(data_size(ctype_double()) == sizeof(double));
-  assert(data_size(ctype_string()) == sizeof(char *));
+  assert(data_size(cvalue_long()) == sizeof(long));
+  assert(data_size(cvalue_char()) == sizeof(char));
+  assert(data_size(cvalue_bool()) == sizeof(bool));
+  assert(data_size(cvalue_size_t()) == sizeof(size_t));
+  assert(data_size(cvalue_float()) == sizeof(float));
+  assert(data_size(cvalue_double()) == sizeof(double));
+  assert(data_size(cvalue_string()) == sizeof(char *));
 
-  assert(ctype_equals(integer, ctype_int()));
-  assert(!ctype_equals(integer, ctype_long()));
+  assert(cvalue_equals(integer, cvalue_int()));
+  assert(!cvalue_equals(integer, cvalue_long()));
   assert(data_cmp(WRAP_INT(1), WRAP_INT(2), integer) < 0);
   assert(data_cmp(WRAP_INT(2), WRAP_INT(2), integer) == 0);
   assert(data_cmp(WRAP_INT(3), WRAP_INT(2), integer) > 0);
@@ -57,12 +57,12 @@ static void test_builtin_types(void) {
 
 static void test_string_data(void) {
   char word[] = "hello";
-  char *word_copy = data_dup(word, ctype_string());
+  char *word_copy = data_dup(word, cvalue_string());
 
   assert(word_copy != NULL);
   word[0] = 'j';
   assert(strcmp(word_copy, "hello") == 0);
-  data_destroy(word_copy, ctype_string());
+  data_destroy(word_copy, cvalue_string());
 }
 
 static void test_custom_type_callbacks(void) {
@@ -70,9 +70,9 @@ static void test_custom_type_callbacks(void) {
   custom_destroy_calls = 0;
   custom_print_calls = 0;
 
-  ctype *custom = ctype_create(sizeof(int), duplicate_int, destroy_int,
+  cvalue *custom = cvalue_create(sizeof(int), duplicate_int, destroy_int,
                                print_int_without_output, compare_int);
-  int value = 42;
+  const int value = 42;
   int *value_copy = data_dup(&value, custom);
 
   assert(value_copy != NULL);
@@ -84,8 +84,8 @@ static void test_custom_type_callbacks(void) {
   assert(custom_dup_calls == 1);
   assert(custom_destroy_calls == 1);
 
-  ctype_destroy(custom);
-  ctype_destroy(NULL);
+  cvalue_destroy(custom);
+  cvalue_destroy(NULL);
 }
 
 int main(void) {

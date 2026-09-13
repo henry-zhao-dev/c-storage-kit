@@ -5,7 +5,7 @@ function(add_cstorage_kit_unit_test target source)
 endfunction()
 
 set(CSTORAGE_KIT_UNIT_TEST_TARGETS
-    cstorage_kit_ctype_tests
+    cstorage_kit_cvalue_tests
     cstorage_kit_calist_ownership_tests
     cstorage_kit_calist_lifecycle_tests
     cstorage_kit_calist_bulk_tests
@@ -13,7 +13,7 @@ set(CSTORAGE_KIT_UNIT_TEST_TARGETS
     cstorage_kit_calist_transformations_tests
 )
 
-add_cstorage_kit_unit_test(cstorage_kit_ctype_tests test_ctype.c)
+add_cstorage_kit_unit_test(cstorage_kit_cvalue_tests test_cvalue.c)
 add_cstorage_kit_unit_test(
     cstorage_kit_calist_ownership_tests
     test_calist_ownership.c

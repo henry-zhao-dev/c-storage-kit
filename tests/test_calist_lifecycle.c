@@ -2,13 +2,13 @@
 #include <stdlib.h>
 
 #include "calist.h"
-#include "ctype.h"
+#include "cvalue.h"
 
 #include "test_helpers.h"
 
 static void test_creation_and_access(void) {
-  calist *list = calist_create_size(ctype_int(), 2);
-  assert(calist_type(list) == ctype_int());
+  calist *list = calist_create_size(cvalue_int(), 2);
+  assert(calist_type(list) == cvalue_int());
   assert(calist_size(list) == 0);
   assert(calist_empty(list));
   assert(calist_capacity(list) == 2);
@@ -44,7 +44,7 @@ static void test_creation_and_access(void) {
 }
 
 static void test_clear_and_reclaim(void) {
-  calist *list = calist_create_size(ctype_int(), 8);
+  calist *list = calist_create_size(cvalue_int(), 8);
   calist_append(list, WRAP_INT(1));
   calist_append(list, WRAP_INT(2));
   size_t capacity = calist_capacity(list);
@@ -62,14 +62,14 @@ static void test_clear_and_reclaim(void) {
 }
 
 static void test_aliases(void) {
-  calist *list = calist_create(ctype_int());
+  calist *list = calist_create(cvalue_int());
   calist_add(list, WRAP_INT(1));
   calist_insert_back(list, WRAP_INT(2));
   assert(calist_length(list) == 2);
   assert(calist_find(list, WRAP_INT(1)) == 0);
   assert(calist_find_last(list, WRAP_INT(2)) == 1);
 
-  calist *source = calist_create(ctype_int());
+  calist *source = calist_create(cvalue_int());
   calist_add(source, WRAP_INT(3));
   calist_add_all(list, source);
   assert_int_list(list, (int[]){1, 2, 3}, 3);
